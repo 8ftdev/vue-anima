@@ -2,6 +2,17 @@
 
 Small reactive goal-style animations for Vue, powered by the [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
 
+## Install
+
+Install [@8ft/vue-anima from JSR](https://jsr.io/@8ft/vue-anima) with Bun in your Vue project:
+
+```sh
+bun add vue
+bunx jsr add @8ft/vue-anima
+```
+
+If Vue is already installed, skip the first command. The JSR command adds the package to `package.json` and configures the JSR registry in `.npmrc`; commit both files. Vue is a peer dependency. Tested with regular Vue **3.5.43**, regular Vue **3.6.0-rc.9**, and Vapor **3.6.0-rc.9**. Vapor is a prerelease API; pin your Vue/compiler versions together.
+
 ## How to use
 
 ```vue
@@ -19,16 +30,6 @@ const isActive = ref(false);
 ```
 
 `true` animates to the goal. `false` animates back to the element's base styles. Interrupted animations continue from the current appearance.
-
-## Install
-
-Install from JSR with Bun:
-
-```sh
-bunx jsr add @8ft/vue-anima
-```
-
-Vue is a peer dependency. Tested with regular Vue **3.5.43**, regular Vue **3.6.0-rc.9**, and Vapor **3.6.0-rc.9**. Vapor is a prerelease API; pin your Vue/compiler versions together.
 
 ## Styles and options
 
