@@ -2,10 +2,14 @@ import { expect, test } from 'bun:test';
 import { vAnima } from 'vue-anima';
 import { vAnima as vapor } from 'vue-anima/vapor';
 import { classGoals } from 'vue-anima/plugins/classes';
+import { animaTailwind } from 'vue-anima/plugins/vite-tailwind';
 
 test('built package exports load without browser globals', () => {
   expect(typeof document).toBe('undefined');
   expect(typeof vAnima.updated).toBe('function');
   expect(typeof vapor).toBe('function');
   expect(typeof classGoals()).toBe('function');
+  expect(animaTailwind({ css: 'src/style.css' }).name).toBe(
+    'vue-anima:vite-tailwind',
+  );
 });

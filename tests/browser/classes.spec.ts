@@ -399,3 +399,34 @@ test('bg-current preserves the source element computed text color', async ({
   });
   expect(result).toBe('rgb(0, 0, 255)');
 });
+
+test('class manifest resolves computed goal properties without CSS rule enumeration', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.waitForFunction(() => typeof window.classGoals === 'function');
+  const result = await page.evaluate(() => {
+    const el = document.createElement('div');
+    el.className = 'bg-red-200';
+    document.body.append(el);
+    Object.defineProperty(document, 'styleSheets', {
+      value: [],
+      configurable: true,
+    });
+    const resolve = window.classGoals({ 'bg-blue-300': ['background-color'] });
+    const goal = resolve('bg-blue-300', el);
+    const after = el.className;
+    return { goal: goal?.backgroundColor, after };
+  });
+  expect(result.goal).toBeTruthy();
+  expect(result.after).toBe('bg-red-200');
+});
+
+test('Vite Tailwind manifest is available to the Vue component using it', async ({
+  page,
+}) => {
+  await page.goto('/tests/fixtures/tailwind.html');
+  const manifest = await page.evaluate(() => window.animaManifest);
+  expect(manifest['bg-blue-300']).toContain('background-color');
+  expect(manifest['sm:bg-red-200']).toContain('background-color');
+});

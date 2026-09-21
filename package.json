@@ -21,6 +21,14 @@
     "./plugins/classes": {
       "types": "./dist/plugins/classes.d.ts",
       "import": "./dist/plugins/classes.js"
+    },
+    "./plugins/vite-tailwind": {
+      "types": "./dist/plugins/vite-tailwind.d.ts",
+      "import": "./dist/plugins/vite-tailwind.js"
+    },
+    "./plugins/vite-tailwind/client": {
+      "types": "./dist/plugins/vite-tailwind-client.d.ts",
+      "import": "./dist/plugins/vite-tailwind-client.js"
     }
   },
   "scripts": {
@@ -34,15 +42,20 @@
     "dev": "vite --host 127.0.0.1",
     "size": "bun scripts/size.ts",
     "check": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run size && bun run test:package",
-    "test:package": "bun test tests/package && tsc --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck false dist/index.d.ts dist/vapor.d.ts dist/plugins/classes.d.ts"
+    "test:package": "bun test tests/package && tsc --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck false dist/index.d.ts dist/vapor.d.ts dist/plugins/classes.d.ts dist/plugins/vite-tailwind.d.ts dist/plugins/vite-tailwind-client.d.ts tests/package/virtual-types.ts",
+    "benchmark": "bun benchmarks/bench.ts"
   },
   "peerDependencies": {
-    "vue": "^3.5.0 || ^3.6.0-0"
+    "vue": "^3.5.0 || ^3.6.0-0",
+    "@tailwindcss/node": "^4.3.0",
+    "@vue/compiler-sfc": "^3.5.0 || ^3.6.0-0",
+    "vite": "^7.0.0 || ^8.0.0"
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
+    "@tailwindcss/node": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
     "@types/bun": "1.4.2",
     "@vitejs/plugin-vue": "6.0.9",
@@ -53,9 +66,20 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.0",
     "vite": "8.3.0",
+    "vue": "3.6.0-rc.9",
     "vue-stable": "npm:vue@3.5.43",
-    "vue-tsc": "3.3.11",
-    "vue": "3.6.0-rc.9"
+    "vue-tsc": "3.3.11"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "peerDependenciesMeta": {
+    "@tailwindcss/node": {
+      "optional": true
+    },
+    "@vue/compiler-sfc": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  }
 }

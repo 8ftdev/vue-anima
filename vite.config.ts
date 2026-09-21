@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
+import { animaTailwind } from './src/plugins/vite-tailwind.ts';
 
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [
+    animaTailwind({ css: 'tests/fixtures/colors.css' }),
+    vue(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: [
       {

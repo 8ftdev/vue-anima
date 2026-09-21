@@ -146,6 +146,46 @@ Every target class must exist in an inspectable compiled stylesheet. Tailwind mu
 
 Only styles computed on the element itself are goals. Pseudo-elements, descendant-only selectors, and CSS animations are outside the resolver's scope. Responsive and ancestor variants use the conditions that apply when the goal is measured; interaction variants such as `hover:` do not continuously retarget the directive. Browser-discrete properties still change discretely.
 
+### Optional Vite + Tailwind build plugin
+
+For Tailwind 4 projects, `vue-anima/plugins/vite-tailwind` can resolve static class goals during Vite's Vue transform. It reads your Tailwind entry CSS, validates the class candidates against its theme, and exports each candidate's affected CSS property names. The browser resolver still reads computed values, so responsive rules, custom properties, and inherited values use the live element's context.
+
+```sh
+bun add -d @tailwindcss/node
+```
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import tailwindcss from '@tailwindcss/vite';
+import { animaTailwind } from 'vue-anima/plugins/vite-tailwind';
+
+export default defineConfig({
+  plugins: [animaTailwind({ css: 'src/style.css' }), vue(), tailwindcss()],
+});
+```
+
+`css` points to the Tailwind entry stylesheet relative to the Vite root. Keep your normal Tailwind/Vite setup to serve the actual CSS. The build plugin runs in Node and is not included in the browser bundle.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { createAnima } from 'vue-anima';
+import { classGoals } from 'vue-anima/plugins/classes';
+import manifest from 'virtual:vue-anima/tailwind';
+
+const active = ref(false);
+const vAnima = createAnima({ resolvers: [classGoals(manifest)] });
+</script>
+
+<template>
+  <div class="bg-red-200" v-anima:[active]="'bg-blue-300'" />
+</template>
+```
+
+For TypeScript, add `import 'vue-anima/plugins/vite-tailwind/client';` to your `vite-env.d.ts`. Import the virtual manifest in the same Vue component that contains the static goals so Vite has processed those goals before loading it. The plugin recognizes literal strings and literal `styles` values in `v-anima` expressions. Dynamic class strings use the existing runtime CSS inspection path; ensure Tailwind has generated those classes. Static goals with non-Tailwind custom classes should use the runtime resolver without this build plugin. Tailwind's design-system API used here is currently marked unstable, so pin and test your Tailwind version when upgrading.
+
 ## Behavior and limits
 
 - Base styles come from computed CSS, including inline styles, stylesheets, inheritance, and defaults. Initial active goals apply immediately; subsequent changes animate.
@@ -163,8 +203,21 @@ bun install
 bunx playwright install chromium firefox webkit
 bun run check
 bun run test:browser
+bun run benchmark
 bun run dev
 ```
+
+Example benchmark results on an Apple M4 (median across three runs):
+
+| Operation                             |   Median |      p95 |
+| ------------------------------------- | -------: | -------: |
+| Fresh Vite plugin: analyze + manifest | 1.586 ms | 7.467 ms |
+| Warm component analysis               | 0.014 ms | 0.021 ms |
+| Warm manifest generation              | 0.009 ms | 0.013 ms |
+| Dynamic class animation start         | 0.285 ms | 0.325 ms |
+| Manifest-backed class animation start | 0.260 ms | 0.305 ms |
+
+Browser timings are per animation in Chromium; Vite timings exclude the full app build. See [benchmark methodology](benchmarks/README.md) for sample counts and the reproducible setup.
 
 The playground is at `http://127.0.0.1:4173/`. Separate fixtures are at `/tests/fixtures/vapor.html` and `/tests/fixtures/stable.html`.
 

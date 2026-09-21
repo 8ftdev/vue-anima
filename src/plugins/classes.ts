@@ -116,7 +116,9 @@ function styleName(property: string): string {
 }
 
 /** Resolve any compiled class list by comparing class-owned computed styles. */
-export function classGoals(): GoalResolver {
+export function classGoals(
+  manifest?: Readonly<Record<string, readonly string[]>>,
+): GoalResolver {
   const baselines = new WeakMap<HTMLElement, string>();
   return (goal, element) => {
     const parser = element.ownerDocument.createElement('div').style;
@@ -166,7 +168,15 @@ export function classGoals(): GoalResolver {
       source.remove();
 
       parent.insertBefore(target, next);
-      const targetRules = inspect(target, classes);
+      const targetRules =
+        manifest && classes.every((name) => manifest[name] !== undefined)
+          ? {
+              found: new Set(classes),
+              properties: new Set(
+                classes.flatMap((name) => manifest[name] ?? []),
+              ),
+            }
+          : inspect(target, classes);
       if (classes.some((name) => !targetRules.found.has(name))) {
         throw new TypeError(
           'vue-anima: class goal contains a class missing from compiled CSS',

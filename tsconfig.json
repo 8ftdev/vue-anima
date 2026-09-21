@@ -17,6 +17,12 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts", "*.ts"],
-  "exclude": ["tests/fixtures/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "*.ts",
+    "benchmarks/**/*.ts"
+  ],
+  "exclude": ["tests/fixtures/**/*.ts", "tests/package/virtual-types.ts"]
 }
