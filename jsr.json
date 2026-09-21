@@ -1,0 +1,25 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@8ft/vue-anima",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vapor": "./src/vapor.ts",
+    "./plugins/classes": "./src/plugins/classes.ts",
+    "./plugins/vite-tailwind": "./src/plugins/vite-tailwind.ts"
+  },
+  "publish": {
+    "include": [
+      "src/index.ts",
+      "src/vapor.ts",
+      "src/controller.ts",
+      "src/styles.ts",
+      "src/types.ts",
+      "src/plugins/classes.ts",
+      "src/plugins/vite-tailwind.ts",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ]
+  }
+}

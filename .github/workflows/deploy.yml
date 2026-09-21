@@ -1,8 +1,8 @@
 name: Publish
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   publish:
@@ -13,5 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Verify release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          bun -e '
+            const tag = process.env.RELEASE_TAG;
+            const jsr = await Bun.file("jsr.json").json();
+            const pkg = await Bun.file("package.json").json();
+            if (tag !== `v${jsr.version}` || jsr.version !== pkg.version)
+              throw new Error(`Release tag ${tag} must match v${jsr.version} in both manifests`);
+          '
+      - run: bun run check
       - name: Publish package
         run: bunx jsr publish

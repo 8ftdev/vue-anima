@@ -1,11 +1,13 @@
 # vue-anima
 
-Small reactive goal-style animations for Vue, powered by the browser's Web Animations API. No animation loop, VueUse dependency, or bundled Vue runtime.
+Small reactive goal-style animations for Vue, powered by the [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
+
+## How to use
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { vAnima } from 'vue-anima';
+import { vAnima } from '@8ft/vue-anima';
 
 const isActive = ref(false);
 </script>
@@ -18,16 +20,12 @@ const isActive = ref(false);
 
 `true` animates to the goal. `false` animates back to the element's base styles. Interrupted animations continue from the current appearance.
 
-## Install locally
+## Install
 
-This package has not been published. Build this checkout and link it into a Vue project with Bun:
+Install from JSR with Bun:
 
 ```sh
-bun install
-bun run build
-bun link
-# In your consuming project:
-bun link vue-anima
+bunx jsr add @8ft/vue-anima
 ```
 
 Vue is a peer dependency. Tested with regular Vue **3.5.43**, regular Vue **3.6.0-rc.9**, and Vapor **3.6.0-rc.9**. Vapor is a prerelease API; pin your Vue/compiler versions together.
@@ -78,7 +76,7 @@ Use the Vapor entry point in a Vapor component:
 ```vue
 <script setup vapor lang="ts">
 import { ref } from 'vue';
-import { vAnima } from 'vue-anima/vapor';
+import { vAnima } from '@8ft/vue-anima/vapor';
 
 const isActive = ref(false);
 </script>
@@ -96,8 +94,8 @@ The regular adapter uses directive hooks. The Vapor adapter uses a post-flush ef
 Create a local directive with shared timing or optional resolvers:
 
 ```ts
-import { createAnima } from 'vue-anima';
-// For Vapor, import createAnima from 'vue-anima/vapor'.
+import { createAnima } from '@8ft/vue-anima';
+// For Vapor, import createAnima from '@8ft/vue-anima/vapor'.
 
 const vAnima = createAnima({ duration: 180, easing: 'ease-out' });
 ```
@@ -105,7 +103,7 @@ const vAnima = createAnima({ duration: 180, easing: 'ease-out' });
 A resolver turns string input into a CSS property object. Return `undefined` for input it does not handle; the next resolver or CSS parser receives it. Resolvers are synchronous and run before the controller mutates styles. They must leave the element unchanged and clean up temporary DOM before returning or throwing.
 
 ```ts
-import { createAnima, type GoalResolver } from 'vue-anima';
+import { createAnima, type GoalResolver } from '@8ft/vue-anima';
 
 const presets: GoalResolver = (goal) => {
   if (goal === 'revealed') return { opacity: 1, transform: 'translateY(0px)' };
@@ -120,8 +118,8 @@ const vAnima = createAnima({ resolvers: [presets] });
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createAnima } from 'vue-anima';
-import { classGoals } from 'vue-anima/plugins/classes';
+import { createAnima } from '@8ft/vue-anima';
+import { classGoals } from '@8ft/vue-anima/plugins/classes';
 
 const isActive = ref(false);
 const vAnima = createAnima({ resolvers: [classGoals()] });
@@ -148,7 +146,7 @@ Only styles computed on the element itself are goals. Pseudo-elements, descendan
 
 ### Optional Vite + Tailwind build plugin
 
-For Tailwind 4 projects, `vue-anima/plugins/vite-tailwind` can resolve static class goals during Vite's Vue transform. It reads your Tailwind entry CSS, validates the class candidates against its theme, and exports each candidate's affected CSS property names. The browser resolver still reads computed values, so responsive rules, custom properties, and inherited values use the live element's context.
+For Tailwind 4 projects, `@8ft/vue-anima/plugins/vite-tailwind` can resolve static class goals during Vite's Vue transform. It reads your Tailwind entry CSS, validates the class candidates against its theme, and exports each candidate's affected CSS property names. The browser resolver still reads computed values, so responsive rules, custom properties, and inherited values use the live element's context.
 
 ```sh
 bun add -d @tailwindcss/node
@@ -159,7 +157,7 @@ bun add -d @tailwindcss/node
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
-import { animaTailwind } from 'vue-anima/plugins/vite-tailwind';
+import { animaTailwind } from '@8ft/vue-anima/plugins/vite-tailwind';
 
 export default defineConfig({
   plugins: [animaTailwind({ css: 'src/style.css' }), vue(), tailwindcss()],
@@ -171,8 +169,8 @@ export default defineConfig({
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createAnima } from 'vue-anima';
-import { classGoals } from 'vue-anima/plugins/classes';
+import { createAnima } from '@8ft/vue-anima';
+import { classGoals } from '@8ft/vue-anima/plugins/classes';
 import manifest from 'virtual:vue-anima/tailwind';
 
 const active = ref(false);
@@ -184,7 +182,20 @@ const vAnima = createAnima({ resolvers: [classGoals(manifest)] });
 </template>
 ```
 
-For TypeScript, add `import 'vue-anima/plugins/vite-tailwind/client';` to your `vite-env.d.ts`. Import the virtual manifest in the same Vue component that contains the static goals so Vite has processed those goals before loading it. The plugin recognizes literal strings and literal `styles` values in `v-anima` expressions. Dynamic class strings use the existing runtime CSS inspection path; ensure Tailwind has generated those classes. Static goals with non-Tailwind custom classes should use the runtime resolver without this build plugin. Tailwind's design-system API used here is currently marked unstable, so pin and test your Tailwind version when upgrading.
+For TypeScript, declare the Vite virtual module in your `vite-env.d.ts`:
+
+```ts
+declare module 'virtual:vue-anima/tailwind' {
+  const manifest: Readonly<Record<string, readonly string[]>>;
+  export default manifest;
+}
+```
+
+Import the virtual manifest in the same Vue component that contains the static goals so Vite has processed those goals before loading it. The plugin recognizes literal strings and literal `styles` values in `v-anima` expressions. Dynamic class strings use the existing runtime CSS inspection path; ensure Tailwind has generated those classes. Static goals with non-Tailwind custom classes should use the runtime resolver without this build plugin. Tailwind's design-system API used here is currently marked unstable, so pin and test your Tailwind version when upgrading.
+
+## v1.0 milestones
+
+- [ ] full WAAPI support
 
 ## Behavior and limits
 
@@ -219,10 +230,12 @@ Example benchmark results on an Apple M4 (median across three runs):
 
 Browser timings are per animation in Chromium; Vite timings exclude the full app build. See [benchmark methodology](benchmarks/README.md) for sample counts and the reproducible setup.
 
-The playground is at `http://127.0.0.1:4173/`. Separate fixtures are at `/tests/fixtures/vapor.html` and `/tests/fixtures/stable.html`.
+Separate fixtures are at `/tests/fixtures/vapor.html` and `/tests/fixtures/stable.html`.
 
 `bun run check` runs strict TypeScript and template checks, typed ESLint, formatting, server-import tests, an ESM/declaration build, and gzip budgets. Browser tests verify actual WAAPI interpolation in Chromium, Firefox, and WebKit, including compiled Vue/Vapor templates and generated Tailwind CSS.
 
 Each core entry point has a **2,048-byte gzip budget**, excluding Vue. The class plugin has its own 1,280-byte budget. Run `bun run size` for measurements of the current build. The optional resolver is not imported by either core entry point.
 
 MIT licensed. Original implementation; VueUse's `useAnimate` was consulted as a reference, not copied.
+
+> DISCLAIMER: A LLM was used as an assistant tool for code generation; all engineering decisions were planned and orchestrated by a 93% human Senior Web Developer Engineer. Use it at your own discretion and always check the source files for your own sake.
