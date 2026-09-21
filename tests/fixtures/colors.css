@@ -1,2 +1,2 @@
 @import 'tailwindcss';
-@source inline('bg-red-200 bg-blue-300');
+@source inline('bg-red-200 bg-blue-300 opacity-50 translate-x-4 rounded-xl p-6 hidden invisible block w-[80px] w-[123px]');

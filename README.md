@@ -115,7 +115,7 @@ const presets: GoalResolver = (goal) => {
 const vAnima = createAnima({ resolvers: [presets] });
 ```
 
-### Optional Tailwind background colors
+### Optional compiled class goals
 
 ```vue
 <script setup lang="ts">
@@ -128,14 +128,23 @@ const vAnima = createAnima({ resolvers: [classGoals()] });
 </script>
 
 <template>
-  <button @click="isActive = !isActive">Change color</button>
-  <div class="bg-red-200" v-anima:[isActive]="'bg-blue-300'">Color</div>
+  <button @click="isActive = !isActive">Animate</button>
+  <div
+    class="w-[80px] bg-red-200 p-2 opacity-50"
+    v-anima:[isActive]="'w-[123px] bg-blue-300 p-6 opacity-100'"
+  >
+    Content
+  </div>
 </template>
 ```
 
-The plugin reads your generated CSS using a temporary hidden sibling. It neither ships Tailwind nor adds target classes permanently. Target classes must be included in Tailwind's source detection or safelist; absent CSS cannot produce the desired color.
+The plugin accepts a complete target class list and reads the CSS your app has already compiled. A temporary sibling represents the element's current classes and another represents the target classes; their changed computed properties become the WAAPI goal. This supports multiple utilities, arbitrary values, layout, transforms, colors, and custom classes without bundling Tailwind or reproducing its theme.
 
-Initial support is intentionally narrow: **one unprefixed `bg-<name>-<shade>` utility** (`50`, `100`–`900`, or `950`), `bg-black`, `bg-white`, `bg-transparent`, or `bg-current`, optionally with a numeric `/opacity` suffix. It reads only `background-color`. It does not implement Tailwind conflict merging, arbitrary values, variants, pseudo-elements, layout utilities, or multiple class goals. Ancestor CSS variables work; selectors or variables that depend on the original element's ID, sibling position, or removed base classes are outside this resolver's contract.
+The element's class attribute is never mutated. Target values are applied through the animation controller while active, then the original cascade is restored. Include every class whose active-state effect you want to retain in the target list.
+
+Every target class must exist in an inspectable compiled stylesheet. Tailwind must detect the complete strings in source or include them through its safelist mechanism. The plugin checks the loaded CSS rules first, so a missing class produces an error instead of silently resolving to browser defaults. Browser security prevents inspection of cross-origin stylesheets without CORS.
+
+Only styles computed on the element itself are goals. Pseudo-elements, descendant-only selectors, and CSS animations are outside the resolver's scope. Responsive and ancestor variants use the conditions that apply when the goal is measured; interaction variants such as `hover:` do not continuously retarget the directive. Browser-discrete properties still change discretely.
 
 ## Behavior and limits
 
@@ -161,6 +170,6 @@ The playground is at `http://127.0.0.1:4173/`. Separate fixtures are at `/tests/
 
 `bun run check` runs strict TypeScript and template checks, typed ESLint, formatting, server-import tests, an ESM/declaration build, and gzip budgets. Browser tests verify actual WAAPI interpolation in Chromium, Firefox, and WebKit, including compiled Vue/Vapor templates and generated Tailwind CSS.
 
-Each core entry point has a **2,048-byte gzip budget**, excluding Vue. The class plugin has its own 1,024-byte budget. Run `bun run size` for measurements of the current build. The optional resolver is not imported by either core entry point.
+Each core entry point has a **2,048-byte gzip budget**, excluding Vue. The class plugin has its own 1,280-byte budget. Run `bun run size` for measurements of the current build. The optional resolver is not imported by either core entry point.
 
 MIT licensed. Original implementation; VueUse's `useAnimate` was consulted as a reference, not copied.

@@ -2,7 +2,7 @@ import { gzipSync } from 'node:zlib';
 for (const [file, budget] of [
   ['index.js', 2048],
   ['vapor.js', 2048],
-  ['plugins/classes.js', 1024],
+  ['plugins/classes.js', 1280],
 ] as const) {
   const bytes = await Bun.file(`dist/${file}`).bytes();
   const gzip = gzipSync(bytes).byteLength;
