@@ -1,3 +1,9 @@
+/**
+ * Resolve class-list goals using the element's live computed CSS styles.
+ * Pass the resolver to `createAnima({ resolvers: [classGoals()] })`.
+ *
+ * @module
+ */
 import type { GoalResolver } from '../types.js';
 
 function hasToken(selector: string, escaped: string): boolean {
@@ -115,7 +121,10 @@ function styleName(property: string): string {
       );
 }
 
-/** Resolve any compiled class list by comparing class-owned computed styles. */
+/**
+ * Create a goal resolver for classes present in the application's compiled CSS.
+ * A Vite Tailwind manifest can avoid runtime stylesheet rule inspection.
+ */
 export function classGoals(
   manifest?: Readonly<Record<string, readonly string[]>>,
 ): GoalResolver {

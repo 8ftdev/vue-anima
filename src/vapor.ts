@@ -1,3 +1,19 @@
+/**
+ * Vue Vapor directive for animating an element to a reactive CSS goal.
+ * Import this entrypoint from a `<script setup vapor>` component.
+ *
+ * @example
+ * ```vue
+ * <script setup vapor lang="ts">
+ * import { ref } from 'vue';
+ * import { vAnima } from '@8ft/vue-anima/vapor';
+ * const active = ref(false);
+ * </script>
+ * <template><div style="opacity: 0" v-anima:[active]="{ opacity: 1 }" /></template>
+ * ```
+ *
+ * @module
+ */
 import { watchPostEffect } from 'vue';
 import { createController } from './controller.js';
 import type { AnimaDefaults, AnimaValue } from './types.js';
@@ -11,7 +27,7 @@ export type {
   Styles,
   Timing,
 } from './types.js';
-/** Accept raw booleans too: vue-tsc 3.3 checks args before getter wrapping. */
+/** Vapor directive signature, accepting a reactive value and boolean argument. */
 export type AnimaDirective = (
   element: HTMLElement,
   value?: () => AnimaValue,
@@ -19,6 +35,7 @@ export type AnimaDirective = (
   modifiers?: Readonly<Record<string, never>>,
 ) => () => void;
 
+/** Create a Vapor directive with shared timing defaults and goal resolvers. */
 export function createAnima(defaults: AnimaDefaults = {}): AnimaDirective {
   return (element, value, argument) => {
     const controller = createController(element, defaults);
@@ -35,4 +52,5 @@ export function createAnima(defaults: AnimaDefaults = {}): AnimaDirective {
   };
 }
 
+/** Ready-to-use Vapor directive with the default animation timing. */
 export const vAnima: AnimaDirective = /* @__PURE__ */ createAnima();

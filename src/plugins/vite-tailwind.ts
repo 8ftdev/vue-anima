@@ -1,3 +1,10 @@
+/**
+ * Vite plugin that validates static Tailwind class goals at build time and
+ * exposes their CSS property names through `virtual:vue-anima/tailwind`.
+ * Requires Tailwind CSS 4 and runs in Vite's Node.js build process.
+ *
+ * @module
+ */
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { __unstable__loadDesignSystem, compile } from '@tailwindcss/node';
@@ -84,7 +91,11 @@ function properties(nodes: CssNode[]): string[] {
   return [...result];
 }
 
-/** Compile static v-anima class goals against the application's Tailwind CSS. */
+/**
+ * Create the Tailwind integration plugin.
+ * `options.css` is the path to the application's Tailwind entry CSS, relative
+ * to the Vite project root.
+ */
 export function animaTailwind(options: { css: string }): Plugin {
   let root = process.cwd();
   let server: ViteDevServer | undefined;

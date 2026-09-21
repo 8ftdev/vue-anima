@@ -1,6 +1,6 @@
 {
   "name": "vue-anima",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tiny reactive goal-style animations for Vue and Vapor, powered by WAAPI.",
   "type": "module",
   "sideEffects": false,
