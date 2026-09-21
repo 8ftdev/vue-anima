@@ -41,7 +41,7 @@
     "test:browser": "playwright test",
     "dev": "vite --host 127.0.0.1",
     "size": "bun scripts/size.ts",
-    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run size && bun run test:package",
+    "check": "bun run build && bun run typecheck && bun run lint && bun run format:check && bun run test && bun run size && bun run test:package",
     "test:package": "bun test tests/package && tsc --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck false dist/index.d.ts dist/vapor.d.ts dist/plugins/classes.d.ts dist/plugins/vite-tailwind.d.ts dist/plugins/vite-tailwind-client.d.ts tests/package/virtual-types.ts",
     "benchmark": "bun benchmarks/bench.ts"
   },
