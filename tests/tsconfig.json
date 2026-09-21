@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "fixtures/**/*.vue",
+    "fixtures/**/*.ts",
+    "../src/**/*.ts",
+    "*.d.ts"
+  ],
+  "vueCompilerOptions": {
+    "strictTemplates": true
+  },
+  "exclude": []
+}
