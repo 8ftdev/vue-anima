@@ -61,13 +61,35 @@ export function createController(
         from[frameName(name)] = computed.getPropertyValue(name);
         to[frameName(name)] = goals[name] ?? original.computed;
       }
+      const mountFrom = !initialized && next.active;
+      if (mountFrom)
+        for (const [name, value] of Object.entries(next.from))
+          from[frameName(name)] = value;
+      const reduced = view.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches;
+      const reducedDuration = reduced ? next.reducedOpacityDuration : undefined;
+      const opacityOnly = reducedDuration !== undefined;
+      const keyframeFrom: Record<string, string> = opacityOnly ? {} : from;
+      const keyframeTo: Record<string, string> = opacityOnly ? {} : to;
+      if (opacityOnly && from.opacity !== undefined)
+        keyframeFrom.opacity = from.opacity;
+      if (opacityOnly && to.opacity !== undefined)
+        keyframeTo.opacity = to.opacity;
+      const timing =
+        reducedDuration === undefined
+          ? next.timing
+          : { ...next.timing, duration: reducedDuration, delay: 0 };
       cancel();
       const shouldAnimate =
-        initialized &&
-        next.timing.duration > 0 &&
+        (initialized || (mountFrom && Object.keys(next.from).length > 0)) &&
+        timing.duration > 0 &&
         typeof element.animate === 'function' &&
-        !view.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-        Object.keys(from).some((name) => from[name] !== to[name]);
+        (!reduced || opacityOnly) &&
+        Object.entries(keyframeFrom).some(
+          ([name, value]) =>
+            keyframeTo[name] !== undefined && value !== keyframeTo[name],
+        );
       previous = goals;
       initialized = true;
       const settle = (): void => {
@@ -86,7 +108,7 @@ export function createController(
         return;
       }
       try {
-        const current = element.animate([from, to], next.timing);
+        const current = element.animate([keyframeFrom, keyframeTo], timing);
         animation = current;
         void current.finished.then(
           () => {

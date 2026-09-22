@@ -13,10 +13,19 @@ export interface Timing {
   easing?: string;
 }
 
+/** Optional opacity fade duration used when reduced motion is requested. */
+export interface ReducedMotionOptions {
+  opacityDuration: number;
+}
+
 /** A goal together with activation and transition timing. */
 export interface AnimaOptions extends Timing {
   styles: Goal;
   active?: boolean;
+  /** Starting CSS values for an initially active mount animation. */
+  from?: Styles;
+  /** Keep spatial changes immediate while fading opacity under reduced motion. */
+  reducedMotion?: ReducedMotionOptions;
 }
 
 /** A directive value: either a goal or an options object containing one. */
@@ -31,4 +40,5 @@ export type GoalResolver = (
 /** Shared timing and optional goal resolvers for `createAnima`. */
 export interface AnimaDefaults extends Timing {
   resolvers?: readonly GoalResolver[];
+  reducedMotion?: ReducedMotionOptions;
 }

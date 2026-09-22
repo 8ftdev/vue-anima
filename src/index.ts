@@ -15,6 +15,7 @@
  */
 import type { DirectiveBinding } from 'vue';
 import { createController } from './controller.js';
+export { createStagger } from './stagger.js';
 import type { Controller } from './controller.js';
 import type { AnimaDefaults, AnimaValue } from './types.js';
 
@@ -24,6 +25,7 @@ export type {
   AnimaValue,
   Goal,
   GoalResolver,
+  ReducedMotionOptions,
   Styles,
   Timing,
 } from './types.js';
