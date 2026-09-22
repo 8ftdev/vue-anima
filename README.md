@@ -58,17 +58,68 @@ You can keep activation in the object too:
 />
 ```
 
-| Option     | Default                            | Meaning                                     |
-| ---------- | ---------------------------------- | ------------------------------------------- |
-| `styles`   | Required in options form           | Target CSS object or resolver input string  |
-| `active`   | `true`                             | Used when no directive argument is supplied |
-| `duration` | `250`                              | Finite nonnegative milliseconds             |
-| `delay`    | `0`                                | Finite nonnegative milliseconds             |
-| `easing`   | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Browser-supported CSS timing function       |
+| Option          | Default                            | Meaning                                             |
+| --------------- | ---------------------------------- | --------------------------------------------------- |
+| `styles`        | Required in options form           | Target CSS object or resolver input string          |
+| `active`        | `true`                             | Used when no directive argument is supplied         |
+| `from`          | None                               | Initial mount keyframe for matching goal properties |
+| `duration`      | `250`                              | Finite nonnegative milliseconds                     |
+| `delay`         | `0`                                | Finite nonnegative milliseconds                     |
+| `easing`        | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Browser-supported CSS timing function               |
+| `reducedMotion` | Instant                            | Optional `{ opacityDuration: number }` fade         |
 
 The boolean argument takes precedence over `active`. Timing changes affect the next transition; equivalent goals do not restart an animation. Numeric CSS values are serialized as supplied: use `opacity: 0.5`, but `width: '100px'`.
 
 Directive values are JavaScript expressions: use `{ opacity: 1 }` or `'opacity: 1'`, rather than bare `opacity: 1`. Configuration belongs in the same options object; there is no separate configuration directive.
+
+### Mount animation and reduced motion
+
+An initially active goal normally applies immediately. Add `from` to animate it on mount. Its properties must also appear in `styles`; it does not replace the element's base styles used when deactivating. With reduced motion, goals still settle immediately by default. Opt into a short opacity-only fade with `reducedMotion`; spatial properties then apply without animation:
+
+```vue
+<div
+  style="opacity: 0; transform: translateY(12px)"
+  v-anima="{
+    styles: { opacity: 1, transform: 'translateY(0px)' },
+    from: { opacity: 0, transform: 'translateY(12px)' },
+    duration: 300,
+    reducedMotion: { opacityDuration: 120 },
+  }"
+/>
+```
+
+For SSR, put the starting appearance in rendered HTML or CSS as shown above. A mounted directive cannot control the first paint before hydration. `from` applies only on the first active mount; later changes still begin from the element's current computed appearance. A zero opacity duration, zero normal duration, or missing WAAPI applies the goal immediately.
+
+### Stagger a group
+
+`createStagger(options, step)` shares one goal across repeated elements. Its returned function adds `index * step` milliseconds to the starting `delay`, so each element can keep its own directive while the sequence is configured once:
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { createStagger, vAnima } from '@8ft/vue-anima';
+
+const visible = ref(true);
+const items = ['First', 'Second', 'Third'];
+const reveal = createStagger(
+  { styles: { opacity: 1 }, from: { opacity: 0 }, duration: 300, delay: 80 },
+  35,
+);
+</script>
+
+<template>
+  <button @click="visible = !visible">Toggle</button>
+  <span
+    v-for="(item, index) in items"
+    :key="item"
+    style="opacity: 0"
+    v-anima:[visible]="reveal(index)"
+    >{{ item }}</span
+  >
+</template>
+```
+
+The three delays are 80, 115, and 150 ms, including the mount animation enabled by `from`. The same order applies when animating back to base styles. The helper also exports from `@8ft/vue-anima/vapor`. Indices must be nonnegative integers, and the step must be a finite nonnegative number. Reduced-motion handling ignores stagger delays.
 
 ## Vapor
 
@@ -200,9 +251,9 @@ Import the virtual manifest in the same Vue component that contains the static g
 
 ## Behavior and limits
 
-- Base styles come from computed CSS, including inline styles, stylesheets, inheritance, and defaults. Initial active goals apply immediately; subsequent changes animate.
+- Base styles come from computed CSS, including inline styles, stylesheets, inheritance, and defaults. Initial active goals apply immediately unless `from` is supplied; subsequent changes animate.
 - Deactivation and removed goal properties restore original inline values and priorities, letting the CSS cascade take over. Unmount cancels animations and restores owned properties.
-- Reduced motion is checked on each changed goal. Without WAAPI, or with zero duration, goals apply immediately. Preference changes alone do not retarget an already-running animation.
+- Reduced motion is checked on each changed goal. By default, all changes apply immediately. With `reducedMotion`, only opacity animates for the requested duration; spatial changes apply immediately. Preference changes alone do not retarget an already-running animation.
 - The browser performs interpolation. Discrete properties follow browser behavior; this package does not measure `height: auto` or add JavaScript spring physics.
 - Use on HTML elements. Avoid other code, CSS transitions, CSS animations, or `!important` stylesheet rules competing for the same animated properties. Goal declarations using `!important` are rejected.
 - The baseline is held during an active transition. Responsive changes are picked up after restoration and a later activation, not continuously while active.

@@ -23,11 +23,16 @@ export function normalize(
   defaults: AnimaDefaults,
 ): {
   styles: Record<string, string>;
+  from: Record<string, string>;
   active: boolean;
+  reducedOpacityDuration: number | undefined;
   timing: { duration: number; delay: number; easing: string; fill: 'both' };
 } {
   const options =
     typeof value === 'object' && 'styles' in value ? value : { styles: value };
+  const reducedOpacityDuration =
+    options.reducedMotion?.opacityDuration ??
+    defaults.reducedMotion?.opacityDuration;
   const duration = options.duration ?? defaults.duration ?? 250;
   const delay = options.delay ?? defaults.delay ?? 0;
   const easing =
@@ -37,12 +42,17 @@ export function normalize(
     duration < 0 ||
     !Number.isFinite(delay) ||
     delay < 0 ||
+    (reducedOpacityDuration !== undefined &&
+      (!Number.isFinite(reducedOpacityDuration) ||
+        reducedOpacityDuration < 0)) ||
     !element.ownerDocument.defaultView?.CSS.supports(
       'animation-timing-function',
       easing,
     )
   ) {
-    throw new TypeError('vue-anima: invalid duration, delay or easing');
+    throw new TypeError(
+      'vue-anima: invalid duration, delay, easing or reduced motion',
+    );
   }
   // CSS accepts global keywords/lists/variables that WAAPI easing rejects.
   // Validate natively before sampling, canceling, or changing any owned styles.
@@ -83,9 +93,30 @@ export function normalize(
       throw new TypeError('vue-anima: goal styles cannot use !important');
     styles[name] = parser.getPropertyValue(name);
   }
+  const from: Record<string, string> = {};
+  if (options.from) {
+    const fromParser = element.ownerDocument.createElement('div').style;
+    for (const [property, raw] of Object.entries(options.from)) {
+      if (raw !== undefined && raw !== null) {
+        const name = cssName(property);
+        fromParser.setProperty(name, String(raw));
+        if (!fromParser.getPropertyValue(name))
+          throw new TypeError(`vue-anima: invalid from value for ${property}`);
+      }
+    }
+    for (const name of fromParser) {
+      if (!(name in styles) || fromParser.getPropertyPriority(name))
+        throw new TypeError(
+          'vue-anima: from properties must match goal styles without !important',
+        );
+      from[name] = fromParser.getPropertyValue(name);
+    }
+  }
   return {
     styles,
+    from,
     active: active ?? options.active ?? true,
+    reducedOpacityDuration,
     timing: { duration, delay, easing, fill: 'both' },
   };
 }

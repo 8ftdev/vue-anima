@@ -330,3 +330,67 @@ test('shorthand goals restore pre-existing longhand values and priorities', asyn
     top: '',
   });
 });
+
+test('explicit from animates an initially active goal and then settles', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const el = document.createElement('div');
+    document.body.append(el);
+    const c = window.createController(el, { duration: 100, easing: 'linear' });
+    c.update({ styles: { opacity: 1 }, from: { opacity: 0 } }, true);
+    const animation = el.getAnimations()[0];
+    if (!animation) throw new Error('Missing mount animation');
+    animation.pause();
+    animation.currentTime = 0;
+    const start = Number(getComputedStyle(el).opacity);
+    animation.currentTime = 50;
+    const middle = Number(getComputedStyle(el).opacity);
+    animation.finish();
+    await animation.finished;
+    return {
+      start,
+      middle,
+      end: el.style.opacity,
+      animations: el.getAnimations().length,
+    };
+  });
+  expect(result).toEqual({ start: 0, middle: 0.5, end: '1', animations: 0 });
+});
+
+test('reduced-motion opacity mode fades opacity while spatial styles settle immediately', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const result = await page.evaluate(async () => {
+    const el = document.createElement('div');
+    el.style.cssText = 'opacity: 0; transform: translateY(20px)';
+    document.body.append(el);
+    const c = window.createController(el, {
+      duration: 500,
+      easing: 'linear',
+      reducedMotion: { opacityDuration: 100 },
+    });
+    c.update({ opacity: 1, transform: 'translateY(0px)' }, false);
+    c.update({ opacity: 1, transform: 'translateY(0px)' }, true);
+    const animation = el.getAnimations()[0];
+    if (!animation) throw new Error('Missing opacity animation');
+    animation.pause();
+    animation.currentTime = 50;
+    const middle = Number(getComputedStyle(el).opacity);
+    const spatialAtMiddle = getComputedStyle(el).transform;
+    animation.finish();
+    await animation.finished;
+    return {
+      middle,
+      spatialAtMiddle,
+      spatialAtEnd: getComputedStyle(el).transform,
+      end: el.style.opacity,
+      animations: el.getAnimations().length,
+    };
+  });
+  expect(result.middle).toBe(0.5);
+  expect(result.spatialAtMiddle).toBe(result.spatialAtEnd);
+  expect(result.end).toBe('1');
+  expect(result.animations).toBe(0);
+});

@@ -16,6 +16,7 @@
  */
 import { watchPostEffect } from 'vue';
 import { createController } from './controller.js';
+export { createStagger } from './stagger.js';
 import type { AnimaDefaults, AnimaValue } from './types.js';
 
 export type {
@@ -24,6 +25,7 @@ export type {
   AnimaValue,
   Goal,
   GoalResolver,
+  ReducedMotionOptions,
   Styles,
   Timing,
 } from './types.js';
